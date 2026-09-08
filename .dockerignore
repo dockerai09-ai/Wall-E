@@ -19,3 +19,6 @@ dist
 npm-debug.log*
 repo-assets
 free-ai-apis.pdf
+
+# Vendored submodules (external/*), not part of the app build
+external

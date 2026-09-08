@@ -1,0 +1,110 @@
+name: Sync upstream & submodules
+
+# Keeps this fork current with tashfeenahmed/freellmapi and moves every
+# submodule under external/ to the tip of the branch it tracks (the
+# `branch = main` entries in .gitmodules). Runs daily and on demand.
+#
+# Scheduled workflows only run from the default branch, so this file has to be
+# on main to take effect.
+
+on:
+  schedule:
+    # 02:00 UTC every day. GitHub cron has no timezone setting, so shift the
+    # hour here for 2am in another zone (e.g. '0 9 * * *' is 2am PDT).
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Never let two syncs race each other on main.
+concurrency:
+  group: sync-upstream-and-submodules
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: https://github.com/tashfeenahmed/freellmapi.git
+  UPSTREAM_BRANCH: main
+  TARGET_BRANCH: main
+
+jobs:
+  sync:
+    name: Merge upstream and bump submodules
+    runs-on: ubuntu-24.04
+    steps:
+      # SYNC_TOKEN is an optional repo secret: a PAT with `contents: write`.
+      # Pushes made with the default GITHUB_TOKEN never trigger other
+      # workflows, so without it the synced commit lands without a CI run.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+          submodules: true
+          token: ${{ secrets.SYNC_TOKEN || github.token }}
+          persist-credentials: true
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "START_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Merge upstream ${{ env.UPSTREAM_BRANCH }}
+        run: |
+          git remote add upstream "$UPSTREAM_REPO"
+          git fetch --no-tags upstream "$UPSTREAM_BRANCH"
+          tip="$(git rev-parse --short "upstream/$UPSTREAM_BRANCH")"
+
+          if git merge-base --is-ancestor "upstream/$UPSTREAM_BRANCH" HEAD; then
+            echo "Already up to date with upstream/$UPSTREAM_BRANCH ($tip)."
+            exit 0
+          fi
+
+          if ! git merge --no-edit -m "chore: merge upstream $UPSTREAM_BRANCH ($tip)" "upstream/$UPSTREAM_BRANCH"; then
+            git merge --abort || true
+            echo "::error::Merging upstream/$UPSTREAM_BRANCH into $TARGET_BRANCH conflicted. Resolve locally: git fetch upstream && git merge upstream/$UPSTREAM_BRANCH"
+            exit 1
+          fi
+          echo "Merged upstream/$UPSTREAM_BRANCH ($tip)."
+
+      - name: Bump submodules to their tracked branch tips
+        run: |
+          git submodule sync --recursive
+          # --remote checks out the tip of each submodule's `branch` from
+          # .gitmodules instead of the commit recorded in the superproject.
+          git submodule update --init --remote
+
+          mapfile -t paths < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+          git add -- "${paths[@]}"
+
+          if git diff --cached --quiet; then
+            echo "Submodules already at their branch tips."
+            exit 0
+          fi
+
+          # --submodule=log lists each bump as "Submodule <path> <old>..<new>:"
+          # followed by the commits pulled in; capped so a big catch-up stays
+          # readable. Written to a file first so head(1) cannot SIGPIPE git.
+          git diff --cached --submodule=log -- "${paths[@]}" > /tmp/submodule-diff
+          {
+            echo "chore(submodules): bump to latest main"
+            echo
+            head -n 200 /tmp/submodule-diff
+          } > /tmp/commit-msg
+          git commit -F /tmp/commit-msg
+          git show --stat --oneline HEAD
+
+      - name: Push
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$START_SHA" ]; then
+            echo "Nothing changed on $TARGET_BRANCH; no push." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          {
+            echo "### Synced \`$TARGET_BRANCH\`"
+            echo
+            echo '```'
+            git log --oneline "$START_SHA..HEAD"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
