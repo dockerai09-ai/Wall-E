@@ -1,0 +1,12 @@
+[submodule "external/nativ"]
+	path = external/nativ
+	url = https://github.com/dockerai09-ai/nativ.git
+	branch = main
+[submodule "external/kimi-k3-in-c"]
+	path = external/kimi-k3-in-c
+	url = https://github.com/dockerai09-ai/kimi-k3-in-c.git
+	branch = main
+[submodule "external/DeepSeek-Coder"]
+	path = external/DeepSeek-Coder
+	url = https://github.com/dockerai09-ai/DeepSeek-Coder.git
+	branch = main
