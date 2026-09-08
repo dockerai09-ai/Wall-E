@@ -14,6 +14,8 @@ server/data/
 .env
 .env.local
 .DS_Store
+.toml
+secretes.toml
 
 # TypeScript incremental build cache
 *.tsbuildinfo
@@ -24,3 +26,6 @@ update-hermes.sh
 
 # Monetization planning — private, never committed
 monetization/
+
+# startup.sh runtime state (pids, logs)
+.startup/
