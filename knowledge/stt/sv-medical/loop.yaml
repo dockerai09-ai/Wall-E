@@ -1,0 +1,46 @@
+# Loop engineering for the sv-medical speech-to-text profile.
+#
+# Each iteration is one coordinate-descent pass: starting from the current
+# best pipeline variant, every dimension in `search` is tried with each of
+# its alternative values, one dimension at a time; a candidate replaces the
+# incumbent only when it lowers the objective without breaking a guardrail.
+# After the pass, the words the incumbent still gets wrong are learned into
+# glossary.learned.yaml (they enter the Whisper prompt and the correction
+# prompt) and the next pass starts. The loop stops when the target has been
+# beaten by `margin`, when `patience` passes bring no improvement, or at
+# `max_iterations`.
+profile: sv-medical
+objective: wer                     # minimised; alternatives: cer, term_error
+guardrails:
+  min_term_recall: 0.85            # medical vocabulary must survive
+  max_pii_leak_rate: 0.0           # no personnummer/phone in the final text
+  max_p95_latency_ms: 30000
+  max_correction_rejections: 0.2   # share of cases where the LLM pass was thrown away
+  max_error_rate: 0.1              # cases that failed outright (e.g. a pinned model with no key left)
+target:
+  arm: claude-pro                  # imported manual arm; absent → the `wer` value below
+  wer: 0.08                        # fallback absolute target
+  margin: 0.01                     # must be at least this much below the target
+budget:
+  max_iterations: 4
+  patience: 2
+  rpm: 18                          # STT calls per minute (Groq free tier allows 20)
+search:
+  stt_model: [whisper-large-v3-turbo, whisper-large-v3]
+  prompt: [glossary, none]
+  correction: [llm, off]
+  correction_model: [null, "groq/openai/gpt-oss-120b"]   # null = router fallback chain
+  temperature: [0]
+start:
+  stt_model: whisper-large-v3-turbo
+  language: sv
+  prompt: glossary
+  correction: llm
+  correction_model: null
+  temperature: 0
+  redact: true
+  structure: false
+learn:
+  enabled: true
+  min_occurrences: 2               # a reference word must be missed in ≥ this many cases
+  max_terms: 40

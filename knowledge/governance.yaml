@@ -13,7 +13,7 @@ ingest:
   # Replace personal data before it is chunked, embedded or sent to any model.
   # Built-in detectors: email, phone, credit_card, iban, ssn, api_key, ip_address.
   redact_pii: true
-  pii_detectors: [email, phone, credit_card, iban, api_key]
+  pii_detectors: [email, phone, credit_card, iban, api_key, personnummer]
   # Extra regexes, applied after the built-ins. Named so audit entries can say which fired.
   custom_redactions: []
   #  - name: employee_id
@@ -43,7 +43,11 @@ generation:
   # Empty = anything the router's fallback chain allows. Names are model ids or
   # provider prefixes ("groq/", "openai/gpt-4o").
   allowed_models: []
-  denied_models: []
+  denied_models:
+    # classifiers, not generators — never let the router hand them a prompt to answer
+    - groq/openai/gpt-oss-safeguard-20b
+    - groq/meta-llama/llama-prompt-guard-2-22m
+    - groq/meta-llama/llama-prompt-guard-2-86m
   max_context_tokens: 6000
   temperature: 0.2
   # When every model is rate-limited, wait up to this long for the announced

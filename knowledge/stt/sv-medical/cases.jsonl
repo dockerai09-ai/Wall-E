@@ -1,0 +1,45 @@
+{"id": "c01", "reference": "Jag har haft ont i bröstet sedan i går kväll och det strålar ut i vänster arm.", "terms": ["bröstet", "strålar", "vänster arm"], "tags": ["kardiologi"]}
+{"id": "c02", "reference": "Jag tar metoprolol femtio milligram en gång om dagen och är allergisk mot penicillin.", "terms": ["metoprolol", "50 mg", "allergisk", "penicillin"], "tags": ["läkemedel", "allergi"]}
+{"id": "c03", "reference": "Jag blir andfådd när jag går uppför trappan och har hostat slem i två veckor.", "terms": ["andfådd", "hostat", "slem"], "tags": ["lungor"]}
+{"id": "c04", "reference": "Jag har typ två diabetes och tar metformin femhundra milligram två gånger dagligen.", "terms": ["diabetes", "metformin", "500 mg"], "tags": ["endokrinologi", "läkemedel"]}
+{"id": "c05", "reference": "Mitt blodsocker låg på tolv komma fem i morse innan frukost.", "terms": ["blodsocker", "12.5"], "tags": ["endokrinologi"]}
+{"id": "c06", "reference": "Jag har haft huvudvärk i tre dagar, den sitter bakom ögonen och blir värre av ljus.", "terms": ["huvudvärk", "ögonen", "ljus"], "tags": ["neurologi"]}
+{"id": "c07", "reference": "Jag svimmade i duschen i morse och slog i huvudet, jag har ingen minneslucka.", "terms": ["svimmade", "huvudet", "minneslucka"], "tags": ["neurologi"]}
+{"id": "c08", "reference": "Jag har kissat oftare än vanligt och det svider när jag kissar.", "terms": ["kissat", "svider"], "tags": ["urologi"]}
+{"id": "c09", "reference": "Jag har haft feber på trettioåtta komma nio och ont i halsen sedan i förrgår.", "terms": ["feber", "38.9", "halsen"], "tags": ["infektion"]}
+{"id": "c10", "reference": "Jag är gravid i vecka tjugoåtta och har haft sammandragningar sedan lunch.", "terms": ["gravid", "vecka 28", "sammandragningar"], "tags": ["obstetrik"]}
+{"id": "c11", "reference": "Jag har ont i nedre delen av ryggen som strålar ner i högra benet ända till foten.", "terms": ["ryggen", "högra benet", "foten"], "tags": ["ortopedi"]}
+{"id": "c12", "reference": "Jag tog två tabletter ibuprofen fyrahundra milligram men det hjälpte inte mot smärtan.", "terms": ["ibuprofen", "400 mg", "smärtan"], "tags": ["läkemedel"]}
+{"id": "c13", "reference": "Jag har haft magsmärtor och diarré i fyra dagar och har varit illamående.", "terms": ["magsmärtor", "diarré", "illamående"], "tags": ["gastroenterologi"]}
+{"id": "c14", "reference": "Jag har blodförtunnande, jag står på waran sedan min blodpropp i benet förra året.", "terms": ["blodförtunnande", "waran", "blodpropp"], "tags": ["läkemedel", "kardiologi"]}
+{"id": "c15", "reference": "Jag har högt blodtryck och tar enalapril tio milligram på morgonen.", "terms": ["blodtryck", "enalapril", "10 mg"], "tags": ["läkemedel"]}
+{"id": "c16", "reference": "Jag har fått utslag på armarna som kliar, det började efter att jag bytte tvättmedel.", "terms": ["utslag", "kliar", "tvättmedel"], "tags": ["dermatologi"]}
+{"id": "c17", "reference": "Jag har svårt att sova, jag vaknar klockan fyra varje natt och kan inte somna om.", "terms": ["sova", "vaknar", "somna"], "tags": ["psykiatri"]}
+{"id": "c18", "reference": "Jag har känt mig nedstämd i flera månader och orkar inte träffa vänner längre.", "terms": ["nedstämd", "orkar"], "tags": ["psykiatri"]}
+{"id": "c19", "reference": "Min dotter är fyra år, hon har haft öronvärk och feber sedan i natt.", "terms": ["dotter", "öronvärk", "feber"], "tags": ["pediatrik"]}
+{"id": "c20", "reference": "Jag är allergisk mot pollen och tar cetirizin tio milligram på våren.", "terms": ["allergisk", "pollen", "cetirizin", "10 mg"], "tags": ["allergi", "läkemedel"]}
+{"id": "c21", "reference": "Jag röker ungefär tio cigaretter om dagen och dricker alkohol på helgerna.", "terms": ["röker", "cigaretter", "alkohol"], "tags": ["levnadsvanor"]}
+{"id": "c22", "reference": "Jag har astma sedan barndomen och använder ventoline vid behov.", "terms": ["astma", "ventoline"], "tags": ["lungor", "läkemedel"]}
+{"id": "c23", "reference": "Jag har hjärtklappning på kvällarna och känner ibland att hjärtat hoppar över ett slag.", "terms": ["hjärtklappning", "hjärtat"], "tags": ["kardiologi"]}
+{"id": "c24", "reference": "Jag har ont i knäet efter att jag vred mig i fotbollen, det är svullet och jag kan inte böja det.", "terms": ["knäet", "svullet", "böja"], "tags": ["ortopedi"]}
+{"id": "c25", "reference": "Jag har haft halsbränna och sura uppstötningar nästan varje kväll efter maten.", "terms": ["halsbränna", "uppstötningar"], "tags": ["gastroenterologi"]}
+{"id": "c26", "reference": "Jag tar levaxin hundra mikrogram varje morgon för min sköldkörtel.", "terms": ["levaxin", "100 mcg", "sköldkörtel"], "tags": ["endokrinologi", "läkemedel"]}
+{"id": "c27", "reference": "Min pappa dog i hjärtinfarkt när han var femtiofem år, och min mamma har diabetes.", "terms": ["hjärtinfarkt", "55", "diabetes"], "tags": ["ärftlighet"]}
+{"id": "c28", "reference": "Jag har tappat fyra kilo på två månader utan att försöka och är trött hela tiden.", "terms": ["4 kg", "trött"], "tags": ["allmänt"]}
+{"id": "c29", "reference": "Jag har domningar i höger hand, särskilt i tummen och pekfingret, på nätterna.", "terms": ["domningar", "höger hand", "tummen", "pekfingret"], "tags": ["neurologi"]}
+{"id": "c30", "reference": "Jag har yrsel när jag reser mig upp snabbt och det svartnar för ögonen.", "terms": ["yrsel", "svartnar"], "tags": ["neurologi"]}
+{"id": "c31", "reference": "Jag opererade blindtarmen för tio år sedan och har inga andra sjukdomar.", "terms": ["opererade", "blindtarmen"], "tags": ["anamnes"]}
+{"id": "c32", "reference": "Jag har haft ont i tänderna och svullen kind på vänster sida i tre dagar.", "terms": ["tänderna", "svullen", "kind"], "tags": ["odontologi"]}
+{"id": "c33", "reference": "Jag har blivit ordinerad amoxicillin femhundra milligram tre gånger dagligen i tio dagar.", "terms": ["amoxicillin", "500 mg", "3 gånger"], "tags": ["läkemedel"]}
+{"id": "c34", "reference": "Jag har haft menstruation som varat i tolv dagar och är mycket rikligare än vanligt.", "terms": ["menstruation", "12 dagar", "rikligare"], "tags": ["gynekologi"]}
+{"id": "c35", "reference": "Jag har svårt att kissa, strålen är svag och jag måste gå upp flera gånger per natt.", "terms": ["kissa", "strålen", "svag"], "tags": ["urologi"]}
+{"id": "c36", "reference": "Jag har haft en klump i bröstet som jag känt i ungefär tre veckor, den gör inte ont.", "terms": ["klump", "bröstet"], "tags": ["onkologi"]}
+{"id": "c37", "reference": "Mitt personnummer är 85 04 12 12 30 och jag är listad på vårdcentralen i Solna.", "terms": ["vårdcentralen", "Solna"], "tags": ["pii"], "pii": ["8504121230"]}
+{"id": "c38", "reference": "Hon heter Karin och hennes personnummer är 62 11 30 45 60, hon är min mamma.", "terms": ["mamma"], "tags": ["pii"], "pii": ["6211304560"]}
+{"id": "c39", "reference": "Ni kan ringa mig på noll sju noll, ett två tre, fyra fem, sex sju om provsvaren är klara.", "terms": ["provsvaren"], "tags": ["pii"], "pii": ["0701234567"]}
+{"id": "c40", "reference": "Jag heter Erik, personnummer 93 09 07 78 90, och jag behöver förnya mitt recept på simvastatin tjugo milligram.", "terms": ["recept", "simvastatin", "20 mg"], "tags": ["pii", "läkemedel"], "pii": ["9309077890"]}
+{"id": "c41", "reference": "Jag har fått en insulinpump och tar novorapid till maten och lantus på kvällen.", "terms": ["insulinpump", "novorapid", "lantus"], "tags": ["endokrinologi", "läkemedel"]}
+{"id": "c42", "reference": "Jag har ont i vänster höft när jag går och det har blivit värre de senaste veckorna.", "terms": ["vänster höft", "värre"], "tags": ["ortopedi"]}
+{"id": "c43", "reference": "Jag har haft näsblod flera gånger i veckan och jag tar trombyl sjuttiofem milligram.", "terms": ["näsblod", "trombyl", "75 mg"], "tags": ["läkemedel"]}
+{"id": "c44", "reference": "Jag är väldigt orolig, jag får panikattacker på bussen och hjärtat rusar.", "terms": ["orolig", "panikattacker", "hjärtat rusar"], "tags": ["psykiatri"]}
+{"id": "c45", "reference": "Jag är kontaktperson för min pappa, hans personnummer är 57 02 24 01 27.", "terms": ["kontaktperson", "pappa"], "tags": ["pii"], "pii": ["5702240127"]}

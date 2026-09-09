@@ -20,7 +20,9 @@
     "db:migration:status": "tsx src/db/migrate/cli.ts status",
     "db:migration:create": "tsx src/db/migrate/cli.ts create",
     "kb:ingest": "tsx src/scripts/kb-ingest.ts",
-    "kb:eval": "tsx src/scripts/kb-eval.ts"
+    "kb:eval": "tsx src/scripts/kb-eval.ts",
+    "stt:bench": "tsx src/scripts/stt-bench.ts",
+    "stt:loop": "tsx src/scripts/stt-loop.ts"
   },
   "dependencies": {
     "@freellmapi/shared": "*",

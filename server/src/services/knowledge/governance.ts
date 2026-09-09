@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { getDb } from '../../db/index.js';
 import { getKnowledgeConfig, KnowledgeError } from './config.js';
 
-const BUILTIN_DETECTORS = ['email', 'phone', 'credit_card', 'iban', 'ssn', 'api_key', 'ip_address'] as const;
+const BUILTIN_DETECTORS = ['email', 'phone', 'credit_card', 'iban', 'ssn', 'personnummer', 'api_key', 'ip_address'] as const;
 export type PiiDetector = typeof BUILTIN_DETECTORS[number];
 
 const policySchema = z.object({
@@ -139,7 +139,7 @@ export function setPolicyForTests(p: Policy | null): void {
 
 // ------------------------------------------------------------- redaction ----
 
-function luhnOk(digits: string): boolean {
+export function luhnOk(digits: string): boolean {
   let sum = 0;
   let alt = false;
   for (let i = digits.length - 1; i >= 0; i--) {
@@ -168,6 +168,20 @@ const DETECTORS: Record<PiiDetector, { re: RegExp; keep?: (m: string) => boolean
   },
   iban: { re: /\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{4}){3,7}(?:[ ]?[A-Z0-9]{1,4})?\b/g },
   ssn: { re: /\b\d{3}-\d{2}-\d{4}\b/g },
+  // Swedish personal identity number: YYMMDD-NNNC or YYYYMMDD-NNNC; the
+  // separator may be '-', '+' (persons over 100), a space (as a speech
+  // recogniser writes it) or absent. The last digit is a Luhn check over the
+  // ten-digit form, which keeps ordinary ten/twelve-digit numbers out.
+  personnummer: {
+    re: /\b(?:19|20)?\d{6}\s?[-+]?\s?\d{4}\b/g,
+    keep: m => {
+      const ten = m.replace(/\D/g, '').slice(-10);
+      const month = Number(ten.slice(2, 4));
+      const day = Number(ten.slice(4, 6));
+      // day 61-91 = samordningsnummer (coordination number)
+      return month >= 1 && month <= 12 && day >= 1 && day <= 91 && luhnOk(ten);
+    },
+  },
   api_key: {
     re: /\b(?:sk|gsk|ghp|gho|xox[bap]|AKIA|AIza|hf)_?[A-Za-z0-9_-]{16,}\b|(?:api[_-]?key|token|secret|password)\s*[:=]\s*["']?[A-Za-z0-9_\-./+]{12,}/gi,
   },
@@ -177,7 +191,7 @@ const DETECTORS: Record<PiiDetector, { re: RegExp; keep?: (m: string) => boolean
   },
 };
 
-const DETECTOR_ORDER: PiiDetector[] = ['credit_card', 'iban', 'ssn', 'api_key', 'email', 'ip_address', 'phone'];
+const DETECTOR_ORDER: PiiDetector[] = ['credit_card', 'iban', 'personnummer', 'ssn', 'api_key', 'email', 'ip_address', 'phone'];
 
 export interface RedactionReport {
   text: string;

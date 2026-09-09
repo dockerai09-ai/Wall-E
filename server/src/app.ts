@@ -34,6 +34,7 @@ import { urlTokenRouter } from './routes/url-tokens.js';
 import { updateRouter } from './routes/update.js';
 import { knowledgeRouter } from './routes/knowledge.js';
 import { ragRouter } from './routes/rag.js';
+import { sttV1Router, sttApiRouter } from './routes/stt.js';
 import { requireAuth } from './middleware/requireAuth.js';
 import { createProxyRateLimiter, createAdminRateLimiter } from './middleware/rateLimit.js';
 
@@ -268,6 +269,7 @@ export function createApp(config?: Config) {
   // Dashboard-session gated like the rest of /api; the /v1/rag surface below
   // is the API-key counterpart.
   app.use('/api/knowledge', requireAuth, knowledgeRouter);
+  app.use('/api/stt', requireAuth, sttApiRouter);
 
   // Health check — no auth required.
   app.get('/api/ping', (_req, res) => {
@@ -301,6 +303,7 @@ export function createApp(config?: Config) {
   // paths it doesn't own fall through to the OpenAI router untouched.
   // RAG over the knowledge bases for API clients (unified / profile keys).
   app.use('/v1', ragRouter);
+  app.use('/v1', sttV1Router);
   app.use('/v1', anthropicRouter);
   app.use('/v1', proxyRouter);
   // OpenAI Responses API shim (Codex CLI requires wire_api="responses"; see #96)
