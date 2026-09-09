@@ -4,7 +4,7 @@
 #
 #   ./startup.sh              dev (default): API server + dashboard with hot reload
 #   ./startup.sh prod         build once, then serve API + dashboard from one port
-#   ./startup.sh docker       docker compose up -d --build
+#   ./startup.sh podman       podman compose up -d --build (docker: same flow with Docker)
 #   ./startup.sh stop         stop what a previous --detach or docker run started
 #   ./startup.sh status       show what is running and which ports are taken
 #
@@ -33,14 +33,15 @@ Modes
             Dashboard http://localhost:5173, API http://localhost:3001
   prod      npm run build, then node server/dist/index.js
             Dashboard + API on http://localhost:3001
-  docker    docker compose up -d --build (starts Docker Desktop on macOS if needed)
+  podman    podman compose up -d --build (starts/creates the podman machine if needed)
             Dashboard + API on http://localhost:3001
-  stop      stop services started with --detach and/or docker compose
+  docker    the same compose flow with Docker, for machines without podman
+  stop      stop services started with --detach and/or compose (podman or docker)
   status    show running services and port usage
 
 Options
   --detach       run in the background; logs in .startup/<name>.log
-  --lan          expose to your LAN (dev: Vite --host; docker: HOST_BIND=0.0.0.0;
+  --lan          expose to your LAN (dev: Vite --host; podman/docker: HOST_BIND=0.0.0.0;
                  prod: HOST=0.0.0.0). Only on a trusted network.
   --open         open the dashboard in a browser once it answers
   --no-install   skip dependency install (npm ci) and .env creation
@@ -49,8 +50,9 @@ Options
   -h, --help     this text
 
 Environment
-  PORT       API port (default 3001; read from .env when present)
-  NODE_BIN   directory holding a Node 20.18–24 node/npm to prefer
+  PORT               API port (default 3001; read from .env when present)
+  NODE_BIN           directory holding a Node 20.18–24 node/npm to prefer
+  CONTAINER_ENGINE   podman | docker (default: podman when installed, else docker)
 USAGE
 }
 
@@ -58,7 +60,7 @@ USAGE
 MODE=dev; DETACH=0; LAN=0; OPEN=0; INSTALL=1; WITH_NATIV=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    dev|prod|docker|stop|status) MODE=$1 ;;
+    dev|prod|podman|docker|stop|status) MODE=$1 ;;
     --detach)      DETACH=1 ;;
     --lan)         LAN=1 ;;
     --open)        OPEN=1 ;;
@@ -247,7 +249,7 @@ banner() {
   esac
   [ "$LAN" -eq 1 ] && echo "  LAN access is on; only use this on a trusted network."
   echo "  First run: add provider keys on the Keys page; the unified API key is in its header."
-  if [ "$DETACH" -eq 1 ] || [ "$1" = docker ]; then echo "  Stop with: ./startup.sh stop"; else echo "  Stop with: Ctrl+C"; fi
+  if [ "$DETACH" -eq 1 ] || [ "$MODE" = podman ] || [ "$MODE" = docker ]; then echo "  Stop with: ./startup.sh stop"; else echo "  Stop with: Ctrl+C"; fi
   echo
 }
 
@@ -307,30 +309,88 @@ run_prod() {
   fi
 }
 
-run_docker() {
-  command -v docker >/dev/null 2>&1 || die "docker is not installed"
-  if ! docker info >/dev/null 2>&1; then
-    if [ "$(uname)" = Darwin ] && [ -d /Applications/Docker.app ]; then
-      info "Starting Docker Desktop"
-      open -a Docker
-      local i=0
-      until docker info >/dev/null 2>&1; do
-        i=$((i + 1)); [ "$i" -ge 120 ] && die "Docker did not become ready within 120s"
-        sleep 1
-      done
-    else
-      die "The Docker daemon is not running"
-    fi
+# ------------------------------------------------------------ containers ----
+# Podman is the default engine (rootless, daemonless); docker stays available
+# for machines without it. CONTAINER_ENGINE=podman|docker overrides detection.
+ENGINE=''
+COMPOSE=()
+export PODMAN_COMPOSE_WARNING_LOGS=false   # silence "Executing external compose provider"
+
+engine_pick() {
+  if [ -n "${CONTAINER_ENGINE:-}" ]; then ENGINE="$CONTAINER_ENGINE"
+  elif [ "$MODE" = docker ]; then ENGINE=docker
+  elif command -v podman >/dev/null 2>&1; then ENGINE=podman
+  elif command -v docker >/dev/null 2>&1; then ENGINE=docker
+  else die "Neither podman nor docker is installed. Podman: brew install podman && podman machine init"
   fi
+  command -v "$ENGINE" >/dev/null 2>&1 || die "$ENGINE is not installed"
+}
+
+engine_ready() { "$ENGINE" info >/dev/null 2>&1; }
+
+# Brings the engine up: the podman machine (macOS/Windows VM) or Docker Desktop.
+engine_start() {
+  engine_ready && return 0
+  local i=0
+  case "$ENGINE" in
+    podman)
+      [ "$(uname)" != Linux ] || die "podman is installed but 'podman info' fails; check the rootless setup"
+      if [ -n "$(podman machine list --format '{{.Name}}' 2>/dev/null)" ]; then
+        info "Starting the podman machine"
+        podman machine start
+      else
+        info "No podman machine yet; creating one (downloads a VM image once, takes a few minutes)"
+        podman machine init
+        podman machine start
+      fi ;;
+    docker)
+      if [ "$(uname)" = Darwin ] && [ -d /Applications/Docker.app ]; then
+        info "Starting Docker Desktop"
+        open -a Docker
+      else
+        die "The Docker daemon is not running"
+      fi ;;
+  esac
+  until engine_ready; do
+    i=$((i + 1)); [ "$i" -ge 120 ] && die "$ENGINE did not become ready within 120s"
+    sleep 1
+  done
+}
+
+# Sets COMPOSE to the compose command for ENGINE; returns 1 when none exists.
+compose_pick() {
+  case "$ENGINE" in
+    podman)
+      if podman compose version >/dev/null 2>&1; then COMPOSE=(podman compose)
+      elif command -v podman-compose >/dev/null 2>&1; then COMPOSE=(podman-compose)
+      else return 1; fi ;;
+    docker) COMPOSE=(docker compose) ;;
+    *) return 1 ;;
+  esac
+}
+compose() { "${COMPOSE[@]}" "$@"; }
+
+run_containers() {
+  engine_pick
+  engine_start
+  compose_pick || die "podman needs a compose provider: brew install podman-compose (or the docker-compose plugin)"
   ensure_env_file
   start_nativ
-  info "docker compose up -d --build  (builds this checkout, not upstream's image)"
-  if [ "$LAN" -eq 1 ]; then HOST_BIND=0.0.0.0 PORT="$API_PORT" docker compose up -d --build
-  else PORT="$API_PORT" docker compose up -d --build; fi
-  banner docker
+  info "${COMPOSE[*]} up -d --build  (builds this checkout with $ENGINE, not upstream's image)"
+  if [ "$LAN" -eq 1 ]; then env HOST_BIND=0.0.0.0 PORT="$API_PORT" "${COMPOSE[@]}" up -d --build
+  else env PORT="$API_PORT" "${COMPOSE[@]}" up -d --build; fi
+  banner "$ENGINE"
   open_when_ready "http://localhost:$API_PORT"
   if wait_for_url "http://localhost:$API_PORT/api/ping" 90; then info "Container is answering."
-  else warn "Container did not answer within 90s; check: docker compose logs -f"; exit 1; fi
+  else warn "Container did not answer within 90s; check: ${COMPOSE[*]} logs -f"; exit 1; fi
+}
+
+# True when ENGINE is installed, up, and has compose containers for this project.
+compose_project_running() {
+  command -v "$ENGINE" >/dev/null 2>&1 || return 1
+  engine_ready || return 1
+  compose_pick || return 1
+  [ -n "$(compose ps -q 2>/dev/null)" ]
 }
 
 do_stop() {
@@ -339,12 +399,13 @@ do_stop() {
     [ -f "$pidf" ] || continue
     stop_pidfile "$pidf"; stopped=1
   done
-  if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 \
-     && [ -n "$(docker compose ps -q 2>/dev/null)" ]; then
-    info "docker compose down"
-    docker compose down
-    stopped=1
-  fi
+  for ENGINE in ${CONTAINER_ENGINE:-podman docker}; do
+    if compose_project_running; then
+      info "${COMPOSE[*]} down"
+      compose down
+      stopped=1
+    fi
+  done
   [ "$stopped" -eq 1 ] || info "Nothing to stop."
 }
 
@@ -359,15 +420,16 @@ do_status() {
   for p in "$API_PORT" "$UI_PORT"; do
     if port_busy "$p"; then echo "port $p: in use by $(port_owner "$p")"; else echo "port $p: free"; fi
   done
-  if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && [ -n "$(docker compose ps -q 2>/dev/null)" ]; then
-    docker compose ps
-  fi
+  for ENGINE in ${CONTAINER_ENGINE:-podman docker}; do
+    if compose_project_running; then echo "containers ($ENGINE):"; compose ps; fi
+  done
 }
 
 case "$MODE" in
   dev)    run_dev ;;
   prod)   run_prod ;;
-  docker) run_docker ;;
+  podman) run_containers ;;
+  docker) run_containers ;;
   stop)   do_stop ;;
   status) do_status ;;
 esac
