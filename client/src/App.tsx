@@ -40,6 +40,7 @@ import EmbeddingDetailPage from '@/pages/EmbeddingDetailPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
 import LogsPage from '@/pages/LogsPage'
 import PremiumPage from '@/pages/PremiumPage'
+import KnowledgePage from '@/pages/KnowledgePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import AgentsPage from '@/pages/AgentsPage'
 
@@ -71,6 +72,7 @@ const navItems = [
   { to: '/agents', labelKey: 'nav.agents' },
   { to: '/analytics', labelKey: 'nav.analytics' },
   { to: '/premium', labelKey: 'nav.premium' },
+  { to: '/knowledge', labelKey: 'nav.knowledge' },
 ]
 
 // The modality pages behind "Models"; surfaced in the nav dropdown and
@@ -460,6 +462,7 @@ function App() {
                       <Route path="/analytics" element={<AnalyticsPage />} />
                       <Route path="/logs" element={<LogsPage />} />
                       <Route path="/premium" element={<PremiumPage />} />
+                      <Route path="/knowledge" element={<KnowledgePage />} />
                       <Route path="/test" element={<Navigate to="/playground" replace />} />
                       <Route path="/health" element={<Navigate to="/keys" replace />} />
                       <Route path="*" element={<NotFoundPage />} />

@@ -1,0 +1,79 @@
+# Wall-E knowledge governance policy.
+#
+# Enforced by the server at ingest, retrieval and generation time. Every
+# enforcement action (redaction, refusal, model denial, deletion) is written to
+# the knowledge audit log with the policy version that triggered it.
+#
+# Override the path with KB_GOVERNANCE_PATH. Reload with POST /api/knowledge/governance/reload.
+
+version: 1
+name: wall-e-default
+
+ingest:
+  # Replace personal data before it is chunked, embedded or sent to any model.
+  # Built-in detectors: email, phone, credit_card, iban, ssn, api_key, ip_address.
+  redact_pii: true
+  pii_detectors: [email, phone, credit_card, iban, api_key]
+  # Extra regexes, applied after the built-ins. Named so audit entries can say which fired.
+  custom_redactions: []
+  #  - name: employee_id
+  #    pattern: "EMP-[0-9]{6}"
+  max_document_bytes: 10485760       # 10 MiB
+  allowed_content_types: [text/plain, text/markdown, text/html, application/json, text/csv]
+  dedupe_by_content_hash: true       # identical content is stored once, sources are merged
+  chunk:
+    target_tokens: 400
+    overlap_tokens: 60
+
+retrieval:
+  max_chunks: 12
+  min_score: 0.05                    # hybrid RRF score floor
+  hybrid: true                       # BM25 (FTS5) + vector, fused with reciprocal rank
+  graph:
+    enabled: true
+    max_hops: 2
+    max_entities: 8
+    max_context_chunks: 6            # extra chunks pulled in via the graph
+
+generation:
+  require_citations: true
+  # With no retrieved evidence the answer is "I don't have that in the knowledge
+  # base" instead of an unsupported model guess. Set false for open-domain chat.
+  refuse_without_evidence: true
+  # Empty = anything the router's fallback chain allows. Names are model ids or
+  # provider prefixes ("groq/", "openai/gpt-4o").
+  allowed_models: []
+  denied_models: []
+  max_context_tokens: 6000
+  temperature: 0.2
+  # When every model is rate-limited, wait up to this long for the announced
+  # reset before answering with an error (0 = fail fast; API clients retry).
+  wait_for_reset_seconds: 0
+
+graph:
+  # Extract entities/relations from every chunk (LLM call per chunk). Off = the
+  # base is vector + keyword only; retrieval.graph then has nothing to expand.
+  extract: true
+  extraction_model: null             # null = router fallback chain; else "platform/model_id" or "model_id"
+  min_confidence: 0.5
+  # Model calls per minute for extraction. Free tiers share their quota with
+  # answers, so keep this modest; the indexer spreads the work over ticks.
+  extractions_per_minute: 20
+  # Relation types whose share of all edges, if above this, is flagged in evals.
+  catch_all_warn_ratio: 0.4
+
+retention:
+  provenance_days: 365               # query/answer lineage
+  audit_days: 730
+  eval_runs_keep: 200
+
+audit:
+  enabled: true
+  # Also mirror audit entries to the server log at info level.
+  log_to_console: false
+
+access:
+  # Knowledge bases are visible only to the client profile that created them
+  # unless the base is marked shared.
+  scope_by_profile: true
+  allow_delete: true                 # DELETE cascades doc -> chunks -> triples and tombstones provenance

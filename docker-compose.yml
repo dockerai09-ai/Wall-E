@@ -9,6 +9,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      # Knowledge graph backend. Empty = graph features run on SQLite only.
+      # With the `graph` profile below, set NEO4J_URI=bolt://neo4j:7687 in .env.
+      NEO4J_URI: ${NEO4J_URI:-}
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-}
     # Bound to localhost by default — FreeLLMAPI is single-user and must not be
     # exposed to the internet. Set HOST_BIND=0.0.0.0 to reach it from your LAN.
     ports:
@@ -35,5 +40,29 @@ services:
       start_period: 15s
       retries: 3
 
+  # Optional Neo4j for the knowledge graph (ontology, entities, provenance).
+  # Not started by default:  podman compose --profile graph up -d   (or docker compose)
+  # Browser on http://localhost:7474, Bolt on 7687, both bound to localhost.
+  neo4j:
+    image: neo4j:5.26-community
+    profiles: ["graph"]
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-change-me-neo4j}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_memory_heap_max__size: ${NEO4J_HEAP:-1G}
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:7474:7474"
+      - "${HOST_BIND:-127.0.0.1}:7687:7687"
+    volumes:
+      - neo4j-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7474 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
 volumes:
   freellmapi-data:
+  neo4j-data:

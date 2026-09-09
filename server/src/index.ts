@@ -7,6 +7,7 @@ import { startWakeDetect } from './lib/wake-detect.js';
 import { startCatalogSync } from './services/catalog-sync.js';
 import { startCooldownProbe } from './services/cooldown-probe.js';
 import { startCustomModelSync } from './services/custom-model-sync.js';
+import { getKnowledgeConfig, startKnowledgeIndexer, getOntology, syncOntologyToNeo4j } from './services/knowledge/index.js';
 import { installProcessSafetyNet } from './lib/process-safety-net.js';
 import { NodeScheduler } from './lib/scheduler.js';
 import { loadConfig } from './lib/config.js';
@@ -85,6 +86,15 @@ async function main() {
     startDbBackupPump(getDb(), scheduler, config.dbPath ?? undefined);
     startBackupScheduler(scheduler);
     startCustomModelSync(getDb(), scheduler);
+
+    // Knowledge module: background embedding/graph indexer plus a best-effort
+    // push of the ontology into Neo4j when NEO4J_URI is set.
+    if (getKnowledgeConfig().enabled) {
+      startKnowledgeIndexer(scheduler);
+      syncOntologyToNeo4j(getOntology()).then(synced => {
+        if (synced) console.log('[knowledge/neo4j] ontology synced');
+      }).catch((err: any) => console.warn(`[knowledge/neo4j] ontology sync failed: ${err?.message ?? err}`));
+    }
 
     // Post-sleep recovery: while the host was suspended (laptop lid, VM
     // pause) timers and keep-alive sockets froze, so the first requests after

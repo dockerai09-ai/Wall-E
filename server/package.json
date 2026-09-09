@@ -18,7 +18,9 @@
     "db:migration:down": "tsx src/db/migrate/cli.ts down",
     "db:migration:fresh": "tsx src/db/migrate/cli.ts fresh",
     "db:migration:status": "tsx src/db/migrate/cli.ts status",
-    "db:migration:create": "tsx src/db/migrate/cli.ts create"
+    "db:migration:create": "tsx src/db/migrate/cli.ts create",
+    "kb:ingest": "tsx src/scripts/kb-ingest.ts",
+    "kb:eval": "tsx src/scripts/kb-eval.ts"
   },
   "dependencies": {
     "@freellmapi/shared": "*",
@@ -29,9 +31,11 @@
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "multer": "^2.2.0",
+    "neo4j-driver": "^6.2.0",
     "sharp": "^0.35.3",
     "socks-proxy-agent": "^10.0.0",
     "undici": "^6.21.0",
+    "yaml": "^2.9.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {

@@ -11,6 +11,7 @@ This is the user entry point — start here to install the gateway, call the Ope
 - **[Clients & coding agents](clients/01-agent-clients.md)** — OpenAI-compatible clients, recipes for Claude Code / Codex CLI / Cline / Continue / Aider / opencode / Cursor, the MCP server, editor autocomplete, and Context Handoff.
 - **[Prompt compression](compression/01-compression-pipeline.md)** — request-side modes, safeguards, per-request controls, custom tool-output filters, statistics, and preview APIs.
 - **[Proxy transports](proxy/OVERVIEW.md)** — outbound proxy transports — forward vs Fetch Relay, system auto-detect, `TRUST_PROXY` for inbound; see [Fetch Relay transport](proxy/01-fetch-relay.md) for the relay protocol and Cloudflare Worker reference.
+- **[Knowledge module](knowledge/01-knowledge-module.md)** — RAG over your own documents with citations, hybrid vector + keyword retrieval, an ontology-constrained knowledge graph mirrored into Neo4j, enforced governance, per-answer provenance (PROV-JSON), and an eval harness.
 - **[Architecture & internals](architecture/00-high-level-index.md)** — how the router works, routing and operational details, what's not supported, honest limitations, and the provider Terms-of-Service review.
 
 ## More

@@ -51,6 +51,8 @@ COPY --from=build --chown=node:node /app/server/package.json ./server/package.js
 COPY --from=build --chown=node:node /app/desktop/package.json ./desktop/package.json
 COPY --from=build --chown=node:node /app/server/dist ./server/dist
 COPY --from=build --chown=node:node /app/client/dist ./client/dist
+# Ontology, governance policy and eval datasets for the knowledge module.
+COPY --from=build --chown=node:node /app/knowledge ./knowledge
 
 RUN mkdir -p /app/server/data && chown -R node:node /app/server/data
 

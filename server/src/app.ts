@@ -32,6 +32,8 @@ import { geminiRouter } from './routes/gemini.js';
 import { ollamaRouter } from './routes/ollama.js';
 import { urlTokenRouter } from './routes/url-tokens.js';
 import { updateRouter } from './routes/update.js';
+import { knowledgeRouter } from './routes/knowledge.js';
+import { ragRouter } from './routes/rag.js';
 import { requireAuth } from './middleware/requireAuth.js';
 import { createProxyRateLimiter, createAdminRateLimiter } from './middleware/rateLimit.js';
 
@@ -262,6 +264,10 @@ export function createApp(config?: Config) {
   app.use('/api/cache', requireAuth, cacheRouter);
   app.use('/api/compression', requireAuth, compressionRouter);
   app.use('/api/update', requireAuth, updateRouter);
+  // Knowledge module (RAG, knowledge graph, evals, governance, provenance).
+  // Dashboard-session gated like the rest of /api; the /v1/rag surface below
+  // is the API-key counterpart.
+  app.use('/api/knowledge', requireAuth, knowledgeRouter);
 
   // Health check — no auth required.
   app.get('/api/ping', (_req, res) => {
@@ -293,6 +299,8 @@ export function createApp(config?: Config) {
   // OpenAI router so it can content-negotiate `GET /v1/models` (Anthropic shape
   // when the caller sends `anthropic-version`, else it falls through). All other
   // paths it doesn't own fall through to the OpenAI router untouched.
+  // RAG over the knowledge bases for API clients (unified / profile keys).
+  app.use('/v1', ragRouter);
   app.use('/v1', anthropicRouter);
   app.use('/v1', proxyRouter);
   // OpenAI Responses API shim (Codex CLI requires wire_api="responses"; see #96)
