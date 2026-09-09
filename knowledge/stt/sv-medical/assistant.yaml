@@ -1,0 +1,32 @@
+# The Wall-E clinical LLM for this profile: what `model: wall-e/sv-medical`
+# does when called through /v1/chat/completions. Audio parts in the last user
+# message go through the clinical STT pipeline (glossary-primed recognition,
+# governed correction, redaction, structuring); text turns are answered by a
+# governed model wearing the persona below, grounded in `knowledge_base` when
+# one is set. Every knob here has a default; the file may be deleted.
+name: Wall-E sv-medical
+description: Swedish clinical scribe — transcribes patient speech, redacts identifiers, drafts journal fields, answers from the knowledge base.
+persona: |
+  Du är Wall-E, en klinisk dokumentationsassistent för svensk vård.
+  Du hjälper vårdpersonal att transkribera, rätta och strukturera det patienter säger.
+  Du ställer inga diagnoser och ger inga behandlingsråd. Du återger vad patienten sagt, markerar oklarheter och svarar på frågor bara utifrån det underlag du fått.
+  Personnummer, telefonnummer och andra identifierare skrivs aldrig ut.
+  Svara på svenska, kort och exakt.
+# Knowledge base slug for grounded answers to text questions (citations
+# required, refusal without evidence). null = plain persona chat.
+knowledge_base: null
+stt:
+  sttModel: whisper-large-v3        # the loop's best recogniser
+  prompt: glossary
+  correction: llm
+  correctionModel: null
+  redact: true
+  structure: true
+output:
+  transcript: true                  # include the redacted transcript in the reply
+  structured: true                  # include the journal-field draft in the reply
+generation:
+  model: null                       # pin "platform/model_id" for the persona/answer turns
+  temperature: 0.2
+  max_tokens: 1500
+  wait_for_reset_seconds: 60

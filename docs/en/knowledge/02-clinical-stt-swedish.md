@@ -9,6 +9,7 @@ This page covers one use case end to end: transcribing what a patient says, in S
 - [What the two products are](#what-the-two-products-are)
 - [Capability comparison](#capability-comparison)
 - [Wall-E's clinical STT pipeline](#wall-es-clinical-stt-pipeline)
+- [The Wall-E clinical LLM (`wall-e/sv-medical`)](#the-wall-e-clinical-llm-wall-esv-medical)
 - [Quick start](#quick-start)
 - [The benchmark](#the-benchmark)
 - [Capturing the Claude Pro arm](#capturing-the-claude-pro-arm)
@@ -76,7 +77,38 @@ A **profile** is a directory under `knowledge/stt/<name>/`. The shipped one is `
 | `loop.yaml` | Search space, guardrails, target and budget for the loop |
 | `arms/` | Hand-captured transcripts for arms that cannot be scripted (Claude Pro) |
 | `PROTOCOL.md` | How to capture the Claude Pro arm |
+| `assistant.yaml` | What `model: wall-e/sv-medical` does: persona, STT variant, knowledge base, generation settings |
 | `audio/`, `.cache/`, `runs/` | Generated: clips, provider-output cache, reports (git-ignored) |
+
+## The Wall-E clinical LLM (`wall-e/sv-medical`)
+
+The pipeline above is also exposed as a **model**: send `model: "wall-e/sv-medical"` to `/v1/chat/completions` and any OpenAI-compatible client (a chat UI, an editor plugin, `curl`, the Wall-E playground) talks to the clinical assistant as if it were one LLM. It is listed in `GET /v1/models` with `owned_by: "wall-e"`. There is one such model per profile directory; its behaviour is declared in `knowledge/stt/<profile>/assistant.yaml` (persona, STT variant, optional knowledge base, generation settings) and every knob has a default, so the file is optional.
+
+It is not a fine-tuned network. It is a composition the router already knows how to run, presented as one id:
+
+| Last user turn contains | Mode | What happens |
+|---|---|---|
+| audio (`input_audio` part, or a `data:` URL `audio_url`) | document | each clip runs the clinical STT pipeline (glossary-primed recognition, governed correction, redaction, journal-field structuring); the reply is the redacted transcript plus a journal draft. With a text instruction alongside the audio, the persona works on that draft (summarise, translate, list follow-ups…) |
+| text only, and `knowledge_base` is set | question | the knowledge module answers with citations from that base, or refuses when the sources do not cover it |
+| text only | chat | the persona replies through the router's fallback chain, subject to the governance model policy |
+
+Whatever the mode, the reply is redacted again before it leaves, so a model cannot reintroduce an identifier the transcript step masked; every audio part leaves a hash-only provenance row. The response carries a `wall_e` extension next to the standard `choices`/`usage`: mode, per-part transcripts with structured fields and provenance ids, citations, redaction counts, the generation model. Streaming (`stream: true`) emits standard chunks and ends with the same extension.
+
+```bash
+# audio in, journal draft out (OpenAI input_audio shape)
+curl -s http://localhost:3001/v1/chat/completions \
+  -H "Authorization: Bearer $WALLE_API_KEY" -H 'Content-Type: application/json' \
+  -d "{\"model\":\"wall-e/sv-medical\",\"messages\":[{\"role\":\"user\",\"content\":[
+        {\"type\":\"text\",\"text\":\"Lista uppföljningspunkter.\"},
+        {\"type\":\"input_audio\",\"input_audio\":{\"data\":\"$(base64 -i besok.wav)\",\"format\":\"wav\"}}]}]}"
+
+# a question, grounded when assistant.yaml names a knowledge base
+curl -s http://localhost:3001/v1/chat/completions -H "Authorization: Bearer $WALLE_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"wall-e/sv-medical","messages":[{"role":"user","content":"Vad gäller vid bröstsmärta?"}]}'
+```
+
+Remote audio URLs are refused on purpose: the server never fetches audio from the network on a client's behalf. A client profile key's enforced system prompt and any `system` message the client sends are prepended to the persona, not substituted for it.
 
 ## Quick start
 

@@ -12,7 +12,7 @@ This is the user entry point — start here to install the gateway, call the Ope
 - **[Prompt compression](compression/01-compression-pipeline.md)** — request-side modes, safeguards, per-request controls, custom tool-output filters, statistics, and preview APIs.
 - **[Proxy transports](proxy/OVERVIEW.md)** — outbound proxy transports — forward vs Fetch Relay, system auto-detect, `TRUST_PROXY` for inbound; see [Fetch Relay transport](proxy/01-fetch-relay.md) for the relay protocol and Cloudflare Worker reference.
 - **[Knowledge module](knowledge/01-knowledge-module.md)** — RAG over your own documents with citations, hybrid vector + keyword retrieval, an ontology-constrained knowledge graph mirrored into Neo4j, enforced governance, per-answer provenance (PROV-JSON), and an eval harness.
-- **[Clinical speech-to-text (Swedish)](knowledge/02-clinical-stt-swedish.md)** — transcribing patient speech with a glossary-primed, governed pipeline; the benchmark and loop that measure it against Claude Pro.
+- **[Clinical speech-to-text (Swedish)](knowledge/02-clinical-stt-swedish.md)** — transcribing patient speech with a glossary-primed, governed pipeline, exposed as the `wall-e/sv-medical` model on `/v1/chat/completions`; the benchmark and loop that measure it against Claude Pro.
 - **[Architecture & internals](architecture/00-high-level-index.md)** — how the router works, routing and operational details, what's not supported, honest limitations, and the provider Terms-of-Service review.
 
 ## More
