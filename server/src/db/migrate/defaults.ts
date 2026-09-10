@@ -33,6 +33,10 @@ import * as analyticsLatencyPercentileIndex from '../migrations/20260902_000001_
 import * as mcpEnabledDefault from '../migrations/20260903_000001_mcp_enabled_default.js';
 import * as responseCache from '../migrations/20260903_000002_response_cache.js';
 
+import * as migration20260909_051719_knowledge_store from '../migrations/20260909_051719_knowledge_store.js';
+
+import * as migration20260909_102623_stt_bench from '../migrations/20260909_102623_stt_bench.js';
+
 export interface MigrationModule {
   up(db: Db): void;
   down(db: Db): void;
@@ -76,6 +80,8 @@ export const QUOTA_OBSERVATION_LOOKUP_FILENAME = '20260901_000002_quota_observat
 export const ANALYTICS_LATENCY_PERCENTILE_INDEX_FILENAME = '20260902_000001_analytics_latency_percentile_index.ts';
 export const MCP_ENABLED_DEFAULT_FILENAME = '20260903_000001_mcp_enabled_default.ts';
 export const RESPONSE_CACHE_FILENAME = '20260903_000002_response_cache.ts';
+export const KNOWLEDGE_STORE_FILENAME = '20260909_051719_knowledge_store.ts';
+export const STT_BENCH_FILENAME = '20260909_102623_stt_bench.ts';
 
 export const DEFAULT_MIGRATIONS: readonly DefaultMigration[] = [
   { filename: LEGACY_BASELINE_FILENAME, module: legacyBaseline },
@@ -111,4 +117,6 @@ export const DEFAULT_MIGRATIONS: readonly DefaultMigration[] = [
   { filename: ANALYTICS_LATENCY_PERCENTILE_INDEX_FILENAME, module: analyticsLatencyPercentileIndex },
   { filename: MCP_ENABLED_DEFAULT_FILENAME, module: mcpEnabledDefault },
   { filename: RESPONSE_CACHE_FILENAME, module: responseCache },
+  { filename: KNOWLEDGE_STORE_FILENAME, module: migration20260909_051719_knowledge_store },
+  { filename: STT_BENCH_FILENAME, module: migration20260909_102623_stt_bench },
 ];

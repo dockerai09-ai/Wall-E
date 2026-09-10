@@ -13,6 +13,7 @@ Every variable FreeLLMAPI reads from `.env`, grouped by concern. Defaults and de
 - [Request body & media limits](#request-body--media-limits)
 - [Storage, cache, analytics & misc](#storage-cache-analytics--misc)
 - [Idempotency](#idempotency)
+- [Knowledge](#knowledge)
 
 Related reading: [02-security-and-keys.md](02-security-and-keys.md) expands on `ENCRYPTION_KEY`; [03-outbound-proxies.md](03-outbound-proxies.md) expands on the proxy chain; [`../proxy/01-fetch-relay.md`](../proxy/01-fetch-relay.md) details the Fetch Relay transport.
 
@@ -130,3 +131,21 @@ In Docker, `127.0.0.1` is the container, not your machine — see [03-outbound-p
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `IDEMPOTENCY_TTL_MS` | `86400000` (24h) | Replay window for completed `Idempotency-Key` claims (`server/src/services/idempotency.ts:36,40-42`, `.env.example` not yet listed — `24*60*60*1000`). Read per call via `envNum()` so tests can flip it live; non-finite/negative → fallback. Only a SHA-256 hash of the caller's key is stored (`hashIdempotencyKey`, never raw key), bound to a fingerprint `SHA-256(model+messages+temperature+top_p+max_tokens+tools+tool_choice)`. Same key + same fingerprint → replay original `200` + body at zero provider cost with `X-Routed-Via: idempotency`; same key + different fingerprint → `409 idempotency_key_conflict`. Applies to non-streaming `POST /v1/chat/completions` only (`stream:true` always bypassed; `finish_reason: length` truncated turns not stored). A duplicate arriving while the original is still in-flight is **NOT deduped** — only completed responses are claimable, so both attempts execute (commit `95bc46f` corrected the header to say so; deliberately out of scope vs a pending-claim with short TTL that could wedge a key — `server/src/services/idempotency.ts:16-20`). Expired rows swept lazily per `key_hash` on next `storeIdempotencyResult` (`DELETE … WHERE expires_at_ms <= ?`). |
+
+## Knowledge
+
+The knowledge module (RAG, knowledge graph, evals, governance, provenance) — see [the knowledge guide](../knowledge/01-knowledge-module.md).
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `KB_ENABLED` | `true` | Master switch for `/api/knowledge` and `/v1/rag`. |
+| `KB_EMBEDDER` | `auto` | `auto` (router if an embedding provider is usable, else `hash` with a warning), `router` (Wall-E's own `/v1/embeddings` engine), `openai` (any OpenAI-compatible endpoint, e.g. Ollama at `http://127.0.0.1:11434/v1`), or `hash` (local deterministic feature hashing; no network, low quality). Chosen once per knowledge base at creation. |
+| `KB_EMBEDDING_MODEL` | unset | Model id for the `router` (an id from the Embeddings page, or `auto`) or `openai` embedder. |
+| `KB_EMBEDDING_BASE_URL` | unset | Base URL for the `openai` embedder; `/embeddings` is appended. |
+| `KB_EMBEDDING_API_KEY` | unset | Bearer token for the `openai` embedder, when the endpoint needs one. |
+| `KB_ONTOLOGY_PATH` | `knowledge/ontology.yaml` | Ontology (entity classes, relation types) the graph extractor is constrained to. Reload with `POST /api/knowledge/ontology/reload`. |
+| `KB_GOVERNANCE_PATH` | `knowledge/governance.yaml` | Governance policy (PII redaction, size/type limits, retrieval and generation rules, model allow/deny, retention, access). Reload with `POST /api/knowledge/governance/reload`. |
+| `NEO4J_URI` | unset | Bolt URI of a Neo4j instance to mirror the graph into (`bolt://neo4j:7687` with the compose `graph` profile, `neo4j+s://…` for Aura). Empty keeps the graph in SQLite only. |
+| `NEO4J_USER` | `neo4j` | Neo4j user. |
+| `NEO4J_PASSWORD` | unset | Neo4j password. |
+| `NEO4J_DATABASE` | `neo4j` | Neo4j database name. |

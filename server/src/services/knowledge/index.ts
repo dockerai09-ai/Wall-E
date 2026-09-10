@@ -1,0 +1,14 @@
+export { getKnowledgeConfig, KnowledgeError, type KnowledgeConfig } from './config.js';
+export { chunkText, estimateTokens } from './chunker.js';
+export { chooseEmbedder, embedderFor, HashEmbedder } from './embedder.js';
+export { getOntology, reloadOntology, ontologySummary } from './ontology.js';
+export { getPolicy, reloadPolicy, policySummary, redactText, audit, listAudit, sweepRetention, isModelAllowed } from './governance.js';
+export * as store from './store.js';
+export { knowledgeChat, setKnowledgeChatForTests } from './llm.js';
+export { retrieve } from './retrieval.js';
+export { ingestDocument } from './ingest.js';
+export { answerQuestion, REFUSAL_TEXT } from './rag.js';
+export { getProvenance, toProvJson } from './provenance.js';
+export { runEval, parseJsonl, evalReportMarkdown } from './evals.js';
+export { runIndexerOnce, startKnowledgeIndexer, stopKnowledgeIndexer, kickIndexer, indexerStatus } from './indexer.js';
+export { neo4jStatus, getGraphMirror, syncOntologyToNeo4j, readCypher, closeGraphMirror } from './neo4j.js';

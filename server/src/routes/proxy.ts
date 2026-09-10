@@ -7,6 +7,9 @@ import { type RouteResult, type ResolvedChain, type ChainRow, routeRequest, reso
 import { runEmbeddings, EmbeddingsError } from '../services/embeddings.js';
 import { runImageGeneration, runVideoGeneration, runSpeech, runTranscription, MediaError, MAX_TRANSCRIPTION_BYTES } from '../services/media.js';
 import multer from 'multer';
+import { resolveWallEModel } from '../services/stt/assistant.js';
+import { handleWallEChatCompletion, wallEModelEntries } from './walle-model.js';
+import { KnowledgeError } from '../services/knowledge/config.js';
 import { getDb } from '../db/index.js';
 import { resolveAuth, prependSystemPrompt, type ResolvedAuth } from '../lib/system-prompt.js';
 import { contentToString, messageHasImage, normalizeOutboundContent, sanitizeResponse, truncateMessagesForGithub } from '../lib/content.js';
@@ -354,6 +357,10 @@ proxyRouter.get('/models', (req: Request, res: Response) => {
   // something can actually serve them, and never when the id would collide
   // with a real catalog row.
   const listedIds = new Set(listed.map(m => m.id));
+  // Wall-E assistant models (one per knowledge/stt/<profile>), served by
+  // routes/walle-model.ts; usable whenever some chat model can answer.
+  const wallEEntries = wallEModelEntries(autoContextWindow, allListed.some(m => m.available === 1))
+    .filter(a => !listedIds.has(a.id));
   const claudeFamilyEntries = allListed.some(m => m.available === 1)
     ? claudeFamilyDiscoveryEntries()
       .filter(a => !listedIds.has(a.id))
@@ -414,6 +421,7 @@ proxyRouter.get('/models', (req: Request, res: Response) => {
         unavailable_reason: autoContextWindow != null ? null : 'no_models',
       },
       ...claudeFamilyEntries,
+      ...wallEEntries,
       ...profileRows.map(p => ({
         id: `auto:${p.name.toLowerCase()}`,
         object: 'model',
@@ -1436,6 +1444,23 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
       },
     });
     return;
+  }
+
+  // Virtual Wall-E models (`wall-e/<profile>`): the clinical assistant
+  // composed from the STT pipeline, the knowledge module and a governed chat
+  // model. Handled whole here; nothing below applies to them.
+  try {
+    const wallE = resolveWallEModel(parsed.data.model);
+    if (wallE) {
+      await handleWallEChatCompletion(req, res, auth, parsed.data as Parameters<typeof handleWallEChatCompletion>[3], wallE);
+      return;
+    }
+  } catch (err: any) {
+    if (err instanceof KnowledgeError) {
+      res.status(err.status).json({ error: { message: err.message, type: 'invalid_request_error' } });
+      return;
+    }
+    throw err;
   }
 
   const { model: requestedModel, temperature, top_p, stream } = parsed.data;

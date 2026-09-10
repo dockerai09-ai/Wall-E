@@ -71,6 +71,14 @@ vi.mock('../../../server/src/services/backups.js', () => ({
   }),
 }));
 
+vi.mock('../../../server/src/services/knowledge/index.js', () => ({
+  getKnowledgeConfig: () => ({ enabled: true }),
+  getOntology: () => ({ name: 'test', version: 1, hash: 'x' }),
+  syncOntologyToNeo4j: vi.fn(async () => false),
+  startKnowledgeIndexer: vi.fn(() => {
+    calls.push('startKnowledgeIndexer');
+  }),
+}));
 vi.mock('../../../server/src/services/custom-model-sync.js', () => ({
   startCustomModelSync: vi.fn(() => {
     calls.push('startCustomModelSync');
@@ -169,6 +177,7 @@ describe('desktop server boot sequence (#949)', () => {
       'startCooldownProbe',
       'startBackupScheduler',
       'startCustomModelSync',
+      'startKnowledgeIndexer',
       'startWakeDetect',
     ]);
   });

@@ -566,3 +566,128 @@ export interface ProviderQuotaObservation extends ProviderQuotaState {
   rawJson: string | null;
   createdAt: string;
 }
+
+// ---------------------------------------------------------------------------
+// Knowledge module (RAG, knowledge graph, evals, governance, provenance).
+// Wire shapes of /api/knowledge (dashboard) responses; the server builds them
+// in routes/knowledge.ts and the dashboard types against them.
+// ---------------------------------------------------------------------------
+
+export interface KnowledgeBaseStats {
+  documents: number;
+  documentsReady: number;
+  chunks: number;
+  chunksEmbedded: number;
+  chunksGraphPending: number;
+  entities: number;
+  relations: number;
+  queries: number;
+}
+
+export interface KnowledgeBaseInfo {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  profileId: number | null;
+  shared: boolean;
+  embedder: string;
+  embeddingModel: string;
+  embeddingDims: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+  stats?: KnowledgeBaseStats;
+}
+
+export type KnowledgeDocumentStatus = 'indexing' | 'ready' | 'error' | 'deleted';
+
+export interface KnowledgeDocumentInfo {
+  id: number;
+  baseId: number;
+  title: string;
+  source: string;
+  contentType: string;
+  contentHash: string;
+  byteSize: number;
+  chunkCount: number;
+  status: KnowledgeDocumentStatus;
+  error: string | null;
+  redactions: number;
+  metadata: Record<string, unknown>;
+  createdAt: string | null;
+  updatedAt: string | null;
+  deletedAt: string | null;
+}
+
+export interface KnowledgeSourceHit {
+  chunkId: number;
+  documentId: number;
+  documentTitle: string;
+  source: string;
+  ordinal: number;
+  text: string;
+  score: number;
+  vectorRank: number | null;
+  keywordRank: number | null;
+  via: ('vector' | 'keyword' | 'graph')[];
+}
+
+export interface KnowledgeCitation {
+  n: number;
+  chunkId: number;
+  documentId: number;
+  title: string;
+  source: string;
+  ordinal: number;
+}
+
+export interface KnowledgeGraphNode {
+  id: number;
+  name: string;
+  class: string;
+  depth: number;
+}
+
+export interface KnowledgeGraphContext {
+  engine: 'neo4j' | 'sqlite' | 'none';
+  seeds: KnowledgeGraphNode[];
+  nodes: KnowledgeGraphNode[];
+  edges: { fromId: number; toId: number; type: string; chunkId: number | null; depth: number; confidence: number }[];
+}
+
+export interface KnowledgeAnswerInfo {
+  id: string;
+  base: { id: number; slug: string; name: string };
+  question: string;
+  answer: string;
+  status: 'ok' | 'refused';
+  citations: KnowledgeCitation[];
+  sources: KnowledgeSourceHit[];
+  graph: KnowledgeGraphContext;
+  model: { platform: string; modelId: string } | null;
+  usage: TokenUsage | null;
+  latencyMs: number;
+  governance: {
+    policyVersion: string;
+    ontologyHash: string;
+    redactions: number;
+    refused: boolean;
+    citationsMissing: boolean;
+    embedder: string;
+    graphEngine: 'neo4j' | 'sqlite' | 'none';
+  };
+}
+
+export interface KnowledgeEvalRunInfo {
+  id: string;
+  baseId: number;
+  dataset: string;
+  status: 'running' | 'done' | 'error';
+  cases: number;
+  error: string | null;
+  metrics: Record<string, unknown>;
+  config: Record<string, unknown>;
+  startedAt: string | null;
+  finishedAt: string | null;
+  results?: unknown[];
+}

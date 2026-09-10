@@ -15,6 +15,7 @@ import {
   Moon,
   Search,
   Sparkles,
+  BookOpen,
   SquareTerminal,
   Zap,
 } from 'lucide-react'
@@ -117,6 +118,7 @@ export function CommandPalette() {
       { id: 'p-agents', group: 'pages', label: t('nav.agents'), keywords: 'agents claude codex cline ollama gemini', icon: Bot, run: go('/agents') },
       { id: 'p-analytics', group: 'pages', label: t('nav.analytics'), keywords: 'analytics usage stats savings latency', icon: ChartColumn, run: go('/analytics') },
       { id: 'p-premium', group: 'pages', label: t('nav.premium'), keywords: 'premium catalog license subscription', icon: Sparkles, run: go('/premium') },
+      { id: 'p-knowledge', group: 'pages', label: t('nav.knowledge'), keywords: 'knowledge rag documents graph neo4j evals provenance', icon: BookOpen, run: go('/knowledge') },
     ]
     const actions: Command[] = [
       {

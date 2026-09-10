@@ -1,0 +1,129 @@
+# Swedish clinical vocabulary used two ways:
+#  1. as the Whisper `prompt` (spelling bias: the recogniser sees these words
+#     as if they had just been spoken, so it prefers these spellings), and
+#  2. as the reference list for the LLM correction pass.
+# `aliases` are misrecognitions the correction pass may map back to the term.
+# The loop appends terms it learns from benchmark errors to glossary.learned.yaml.
+name: sv-medical
+version: 1
+language: sv
+context: "Samtal mellan patient och vårdpersonal på svenska. Patienten beskriver symtom, sjukdomshistoria och läkemedel."
+categories:
+  läkemedel:
+    - term: metoprolol
+      aliases: [metropolol, meto prolol]
+    - term: metformin
+    - term: enalapril
+      aliases: [enalapril]
+    - term: simvastatin
+    - term: atorvastatin
+    - term: waran
+      aliases: [varan, waran]
+    - term: trombyl
+      aliases: [trombyl, trombil]
+    - term: eliquis
+    - term: xarelto
+    - term: ibuprofen
+      aliases: [ibuprofen, ibuprofén]
+    - term: paracetamol
+      aliases: [paracetamål, panodil, alvedon]
+    - term: amoxicillin
+      aliases: [amoxicilin]
+    - term: penicillin
+      aliases: [pencillin, penicilin]
+    - term: kåvepenin
+    - term: cetirizin
+      aliases: [setirizin]
+    - term: levaxin
+      aliases: [levaksin]
+    - term: ventoline
+      aliases: [ventolin]
+    - term: novorapid
+      aliases: [novo rapid]
+    - term: lantus
+    - term: insulin
+    - term: omeprazol
+    - term: sertralin
+    - term: citalopram
+    - term: zopiklon
+    - term: furosemid
+    - term: losartan
+    - term: amlodipin
+  diagnoser:
+    - term: diabetes
+    - term: astma
+    - term: KOL
+    - term: hjärtinfarkt
+    - term: hjärtsvikt
+    - term: förmaksflimmer
+    - term: blodpropp
+    - term: högt blodtryck
+    - term: hypertoni
+    - term: stroke
+    - term: migrän
+    - term: depression
+    - term: ångest
+    - term: panikattacker
+    - term: urinvägsinfektion
+    - term: halsfluss
+    - term: lunginflammation
+    - term: gallsten
+    - term: njursten
+    - term: artros
+    - term: sköldkörtel
+    - term: cancer
+  symtom:
+    - term: bröstsmärta
+    - term: andfådd
+    - term: hjärtklappning
+    - term: yrsel
+    - term: svimmade
+    - term: huvudvärk
+    - term: illamående
+    - term: kräkningar
+    - term: diarré
+    - term: förstoppning
+    - term: halsbränna
+    - term: sura uppstötningar
+    - term: magsmärtor
+    - term: feber
+    - term: hosta
+    - term: slem
+    - term: utslag
+    - term: kliar
+    - term: domningar
+    - term: stickningar
+    - term: nedstämd
+    - term: sömnsvårigheter
+    - term: näsblod
+    - term: sammandragningar
+    - term: öronvärk
+    - term: svullen
+    - term: klump
+  anatomi:
+    - term: bröstet
+    - term: vänster arm
+    - term: höger hand
+    - term: ryggen
+    - term: knäet
+    - term: höften
+    - term: sköldkörteln
+    - term: blindtarmen
+    - term: tummen
+    - term: pekfingret
+    - term: halsen
+  vård:
+    - term: vårdcentralen
+    - term: akuten
+    - term: recept
+    - term: provsvar
+    - term: blodsocker
+    - term: blodtryck
+    - term: personnummer
+    - term: ordinerad
+    - term: dosering
+    - term: milligram
+    - term: mikrogram
+    - term: tabletter
+    - term: två gånger dagligen
+    - term: vid behov

@@ -1,0 +1,101 @@
+# Wall-E knowledge ontology.
+#
+# The graph extractor may only emit entity classes and relation types declared
+# here; anything else is dropped at ingest and counted in the extraction report.
+# The same file is loaded into Neo4j as (:OntologyClass) / (:OntologyRelation)
+# nodes with uniqueness constraints, so the graph and the schema never drift.
+#
+# Override the path with KB_ONTOLOGY_PATH. Reload with POST /api/knowledge/ontology/reload.
+
+version: 1
+name: wall-e-default
+description: >
+  General-purpose ontology for technical and product knowledge: people,
+  organisations, products, technologies, concepts, events and places, plus the
+  system layer (Document, Chunk) that carries provenance.
+
+classes:
+  - name: Person
+    description: An individual human being.
+    properties: [name, role, affiliation]
+  - name: Organization
+    description: A company, team, institution, open-source project or community.
+    properties: [name, kind, url]
+  - name: Product
+    description: A software product, service, model family or hardware product.
+    properties: [name, version, vendor]
+  - name: Technology
+    description: A language, framework, protocol, algorithm, standard or tool.
+    properties: [name, category]
+  - name: Concept
+    description: An abstract idea, method, metric, policy or domain term.
+    properties: [name, definition]
+  - name: Event
+    description: Something that happened at a point in time (release, incident, decision).
+    properties: [name, date]
+  - name: Location
+    description: A geographic or logical place (city, region, data centre, environment).
+    properties: [name, kind]
+
+relations:
+  - name: WORKS_FOR
+    from: [Person]
+    to: [Organization]
+  - name: MEMBER_OF
+    from: [Person, Organization]
+    to: [Organization]
+  - name: BUILT_BY
+    from: [Product, Technology]
+    to: [Organization, Person]
+  - name: USES
+    from: [Product, Organization, Person, Technology]
+    to: [Technology, Product]
+  - name: DEPENDS_ON
+    from: [Product, Technology]
+    to: [Product, Technology]
+  - name: PART_OF
+    from: [Product, Technology, Concept, Organization]
+    to: [Product, Technology, Concept, Organization]
+  - name: IMPLEMENTS
+    from: [Product, Technology]
+    to: [Concept, Technology]
+  - name: COMPETES_WITH
+    from: [Product, Organization]
+    to: [Product, Organization]
+  - name: LOCATED_IN
+    from: [Organization, Person, Event]
+    to: [Location]
+  - name: OCCURRED_AT
+    from: [Event]
+    to: [Location, Organization]
+  - name: INVOLVES
+    from: [Event]
+    to: [Person, Organization, Product, Technology]
+  - name: DEFINES
+    from: [Concept]
+    to: [Concept]
+  # Catch-all so the extractor can keep a genuinely useful edge that fits no
+  # specific type. Keep it last; evals report how often it is used so an
+  # over-used RELATED_TO signals the ontology needs a new relation.
+  - name: RELATED_TO
+    from: [any]
+    to: [any]
+
+# System layer, managed by Wall-E itself. Not available to the extractor.
+system:
+  classes: [Document, Chunk, Query, Answer, EvalRun]
+  relations:
+    - { name: HAS_CHUNK,   from: Document, to: Chunk }
+    - { name: MENTIONS,    from: Chunk,    to: '*' }
+    - { name: RETRIEVED,   from: Query,    to: Chunk }
+    - { name: TRAVERSED,   from: Query,    to: '*' }
+    - { name: ANSWERED_BY, from: Query,    to: Answer }
+    - { name: CITES,       from: Answer,   to: Chunk }
+
+extraction:
+  # Extraction is done per chunk by the router's chat fallback chain unless
+  # governance.yaml pins a model. Entities are canonicalised by lower-cased
+  # name + class so "Neo4j" and "neo4j" merge into one node.
+  max_entities_per_chunk: 25
+  max_relations_per_chunk: 40
+  min_confidence: 0.5

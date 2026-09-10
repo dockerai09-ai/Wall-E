@@ -75,10 +75,37 @@ function isBackupableTable(name: string): boolean {
   return !isInternalTable(name) && !isExcludedTable(name);
 }
 
+/** Virtual tables (the knowledge module's FTS5 index) and the shadow tables
+ *  SQLite keeps beneath them are derived data: `CREATE VIRTUAL TABLE` cannot be
+ *  replayed as `CREATE TABLE IF NOT EXISTS`, and dumping the shadow rows next
+ *  to the content table's triggers would double-index on restore. They are
+ *  left out of dumps and rebuilt from their content table after a restore
+ *  (rebuildVirtualIndexes). */
+function virtualTables(db: Db): { name: string; sql: string }[] {
+  return db.prepare("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND sql LIKE 'CREATE VIRTUAL TABLE%'")
+    .all() as { name: string; sql: string }[];
+}
+
+function isDerivedTable(name: string, virtual: { name: string }[]): boolean {
+  return virtual.some((v) => name === v.name || name.startsWith(`${v.name}_`));
+}
+
 /** Every table a dump may contain, in a stable order. */
 export function listTables(db: Db = getDb()): string[] {
   const rows = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all() as { name: string }[];
-  return rows.map((row) => row.name).filter(isBackupableTable);
+  const virtual = virtualTables(db);
+  return rows.map((row) => row.name).filter((name) => isBackupableTable(name) && !isDerivedTable(name, virtual));
+}
+
+/** Rebuild every FTS5 index from its content table. Returns the names rebuilt. */
+export function rebuildVirtualIndexes(db: Db = getDb()): string[] {
+  const rebuilt: string[] = [];
+  for (const v of virtualTables(db)) {
+    if (!/\busing\s+fts5\b/i.test(v.sql)) continue;
+    db.exec(`INSERT INTO "${v.name}"("${v.name}") VALUES('rebuild');`);
+    rebuilt.push(v.name);
+  }
+  return rebuilt;
 }
 
 /* ------------------------------------------------------------------ */
@@ -469,6 +496,14 @@ export function restoreBackup(db: Db, id: number): RestoreResult {
     db.transaction(() => {
       db.exec(sql);
     })();
+    // Derived indexes were not in the dump; bring them back in line with the
+    // rows just loaded. The restore itself is already committed, so a rebuild
+    // failure is logged rather than turned into a rollback.
+    try {
+      rebuildVirtualIndexes(db);
+    } catch (err) {
+      console.warn(`[backups] FTS index rebuild after restore failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
     throw httpError(
